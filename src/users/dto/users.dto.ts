@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { ApiProperty } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsDefined,
@@ -100,4 +101,10 @@ export class LoginDto {
   @IsString()
   @MinLength(8)
   password: string;
+}
+
+export class UserRespondePayload {
+  id: string;
+  email: string;
+  role?: Role;
 }

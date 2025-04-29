@@ -6,6 +6,9 @@ import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { StatusUserModule } from './status-user/status-user.module';
 import { AuthModule } from './auth/auth.module';
+import { ImgurService } from './imgur/imgur.service';
+import { UploadController } from './upload/upload.controller';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
@@ -14,8 +17,14 @@ import { AuthModule } from './auth/auth.module';
     RolesModule,
     StatusUserModule,
     AuthModule,
+    MulterModule.register({
+      dest: './uploads', // Directorio donde se guardarán los archivos subidos
+      limits: {
+        fileSize: 5 * 1024 * 1024, // Tamaño máximo del archivo (5 MB)
+      },
+    }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, UploadController],
+  providers: [AppService, ImgurService],
 })
 export class AppModule {}
