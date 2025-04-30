@@ -27,7 +27,7 @@ export class AuthService {
     if (existingUser) {
       throw new BadRequestException('El email ya está en uso');
     }
-    return await this.usersService.create({
+    return await this.usersService.createWithRegisterForm({
       ...data,
     });
   }

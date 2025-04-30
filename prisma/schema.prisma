@@ -27,6 +27,7 @@ model User {
   statusId       String?     @db.ObjectId
   statusUser     StatusUser? @relation(fields: [statusId], references: [id])
   numberAttempts Int
+  userImg        String?
 }
 
 model Role {

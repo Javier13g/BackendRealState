@@ -7,13 +7,48 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { getPaginationParams } from 'src/utils/pagination.utils';
+import { ImgurService } from 'src/imgur/imgur.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly imgurService: ImgurService,
+  ) {}
 
-  async create(data: CreateUserDto): Promise<UserResponseDto> {
+  async create(
+    data: CreateUserDto,
+    file: Express.Multer.File,
+  ): Promise<UserResponseDto> {
     const hashedPassword = await argon2.hash(data.password);
+
+    let userImgUrl: string | null = null;
+    if (file) {
+      userImgUrl = await this.imgurService.uploadImage(file);
+    }
+    const user = await this.prisma.user.create({
+      data: {
+        ...data,
+        password: hashedPassword,
+        numberAttempts: 0,
+        userImg: userImgUrl,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        lastName: true,
+        address: true,
+        phoneNumber: true,
+        numberAttempts: true,
+      },
+    });
+    return user;
+  }
+
+  async createWithRegisterForm(data: CreateUserDto): Promise<UserResponseDto> {
+    const hashedPassword = await argon2.hash(data.password);
+
     const user = await this.prisma.user.create({
       data: {
         ...data,
@@ -66,7 +101,7 @@ export class UsersService {
         roleId: user?.id ?? null,
         statusUser: user.statusUser,
         statusId: user.statusId,
-        numberAttempts: (user.numberAttempts as number) ?? 0,
+        numberAttempts: user.numberAttempts ?? 0,
       })),
       totalItems,
       totalPages,
