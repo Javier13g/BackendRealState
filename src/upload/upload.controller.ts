@@ -4,6 +4,7 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImgurService } from '../imgur/imgur.service';
@@ -12,14 +13,18 @@ import {
   ApiBody,
   ApiOperation,
   ApiResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
 
 @Controller('upload')
 export class UploadController {
   constructor(private readonly imgurService: ImgurService) {}
 
   @Post('image')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(), // Trabaja en memoria (usa file.buffer)

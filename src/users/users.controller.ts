@@ -22,6 +22,8 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Post()
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   @ApiBody({ type: CreateUserDto })
   @ApiConsumes('multipart/form-data') // Indica que consume form-data
   @ApiBody({
@@ -62,6 +64,8 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
