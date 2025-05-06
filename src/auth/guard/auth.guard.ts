@@ -32,7 +32,6 @@ export class AuthGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const [type, token] =
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       (request as any).headers.authorization?.split(' ') || [];
