@@ -7,6 +7,17 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'https://<tu-usuario>.github.io', // cambia esto por tu dominio real cuando lo tengas
+  ];
+
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Métodos permitidos
+    credentials: true, // Permitir cookies o encabezados de autenticación
+  });
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   app.useGlobalFilters(new AllExceptionsFilter());
