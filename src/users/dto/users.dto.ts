@@ -84,6 +84,15 @@ export class UserResponseDto {
   numberAttempts: number;
 }
 
+export class UpdateUserDto {
+  email?: string;
+  name?: string;
+  lastName?: string;
+  address?: string;
+  phoneNumber?: string;
+  roleId?: string | null;
+}
+
 export class UserResponseIncludePassword extends UserResponseDto {
   password: string;
 }

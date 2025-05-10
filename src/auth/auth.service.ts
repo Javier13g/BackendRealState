@@ -71,7 +71,12 @@ export class AuthService {
     };
     const token = await this.jwtService.signAsync(payload);
     await this.resetAttempts(existingUser.id);
-    return { message: 'Sesión iniciada', token, email: existingUser.email };
+    return {
+      message: 'Sesión iniciada',
+      token,
+      email: existingUser.email,
+      name: existingUser.name + ' ' + existingUser.lastName,
+    };
   }
 
   private async suspendUser(userId: string) {
