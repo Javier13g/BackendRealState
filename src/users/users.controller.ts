@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   Request,
   UploadedFile,
@@ -12,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/users.dto';
+import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -68,5 +69,13 @@ export class UsersController {
   @ApiBearerAuth()
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
+  }
+
+  @Put(':id')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: UpdateUserDto })
+  putUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.usersService.PutDataUser(id, dto);
   }
 }

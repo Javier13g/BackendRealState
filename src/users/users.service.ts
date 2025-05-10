@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   CreateUserDto,
+  UpdateUserDto,
   UserResponseDto,
   UserResponseIncludePassword,
 } from './dto/users.dto';
@@ -8,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { getPaginationParams } from 'src/utils/pagination.utils';
 import { ImgurService } from 'src/imgur/imgur.service';
+import { isValidObjectId } from 'src/utils/validObjectId.utils';
 
 @Injectable()
 export class UsersService {
@@ -147,6 +149,22 @@ export class UsersService {
       data: {
         statusId: idState,
       },
+    });
+  }
+
+  async PutDataUser(idUser: string, data: Partial<UpdateUserDto>) {
+    if (!isValidObjectId(idUser)) {
+      throw new BadRequestException('ID de usuario inválido');
+    }
+    const user = await this.prisma.user.findUnique({
+      where: { id: idUser },
+    });
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+    return await this.prisma.user.update({
+      where: { id: idUser },
+      data: { ...data },
     });
   }
 }
