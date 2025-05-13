@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { ImgurService } from './imgur/imgur.service';
 import { UploadController } from './upload/upload.controller';
 import { MulterModule } from '@nestjs/platform-express';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { MulterModule } from '@nestjs/platform-express';
         fileSize: 5 * 1024 * 1024, // Tamaño máximo del archivo (5 MB)
       },
     }),
+    RedisModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, ImgurService],

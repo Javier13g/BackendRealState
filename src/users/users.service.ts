@@ -120,10 +120,19 @@ export class UsersService {
   async findOneByEmail(
     email: string,
   ): Promise<UserResponseIncludePassword | null> {
-    return await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { email },
       include: { role: true, statusUser: true },
     });
+
+    if (user) {
+      return {
+        ...user,
+        userImg: user.userImg ?? null,
+      };
+    }
+
+    return null;
   }
 
   async listStateUser() {
