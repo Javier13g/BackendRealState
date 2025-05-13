@@ -7,7 +7,12 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   async onModuleInit() {
-    await this.$connect();
+    try {
+      await this.$connect();
+      console.log('✅ Prisma conectado a MongoDB');
+    } catch (error) {
+      console.error('❌ Error al conectar Prisma:', error);
+    }
   }
 
   async onModuleDestroy() {
