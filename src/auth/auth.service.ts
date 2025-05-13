@@ -33,62 +33,60 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-  console.log('Inicio de proceso de login', loginDto);
+  try {
+    console.log('Intentando login con:', loginDto);
 
-  // Verifica si el usuario existe
-  const existingUser = await this.usersService.findOneByEmail(loginDto.email);
-  console.log('Usuario encontrado:', existingUser);
+    const existingUser = await this.usersService.findOneByEmail(loginDto.email);
+    console.log('Usuario encontrado:', existingUser);
 
-  if (!existingUser) {
-    console.log('Email no registrado');
-    throw new UnauthorizedException('Email no registrado');
+    if (!existingUser) {
+      console.log('Email no registrado');
+      throw new UnauthorizedException('Email no registrado');
+    }
+
+    const userStatus = existingUser.statusUser?.statusName.toLowerCase();
+    console.log('Estado del usuario:', userStatus);
+
+    if (userStatus === 'suspendido') {
+      console.log('Usuario suspendido');
+      throw new ForbiddenException('Usuario suspendido, reestablezca contraseña');
+    }
+
+    if (existingUser.numberAttempts > 3) {
+      await this.suspendUser(existingUser.id);
+      throw new ForbiddenException('Usuario suspendido por múltiples intentos fallidos');
+    }
+
+    const isPasswordValid = await argon2.verify(existingUser.password, loginDto.password);
+    console.log('¿Contraseña válida?', isPasswordValid);
+
+    if (!isPasswordValid) {
+      await this.incrementAttempts(existingUser);
+      throw new UnauthorizedException('Contraseña incorrecta');
+    }
+
+    const payload = {
+      id: existingUser.id,
+      email: existingUser.email,
+      role: existingUser?.role ?? 'N/A',
+    };
+    console.log('Payload:', payload);
+
+    const token = await this.jwtService.signAsync(payload);
+    console.log('Token generado');
+
+    await this.resetAttempts(existingUser.id);
+
+    return {
+      message: 'Sesión iniciada',
+      token,
+      email: existingUser.email,
+      name: existingUser.name + ' ' + existingUser.lastName,
+    };
+  } catch (error) {
+    console.error('Error en login:', error);
+    throw error; // sigue lanzando para que se vea en Swagger
   }
-
-  const userStatus = existingUser.statusUser?.statusName.toLowerCase();
-  console.log('Estado del usuario:', userStatus);
-
-  if (userStatus === 'suspendido') {
-    console.log('Usuario suspendido');
-    throw new ForbiddenException('Usuario suspendido, reestablezca contraseña');
-  }
-
-  if (existingUser.numberAttempts > 3) {
-    console.log('Usuario suspendido por múltiples intentos fallidos');
-    await this.suspendUser(existingUser.id);
-    throw new ForbiddenException('Usuario suspendido por múltiples intentos fallidos');
-  }
-
-  // Verifica si la contraseña es correcta
-  const isPasswordValid = await argon2.verify(existingUser.password, loginDto.password);
-  console.log('Contraseña válida:', isPasswordValid);
-
-  if (!isPasswordValid) {
-    console.log('Contraseña incorrecta');
-    await this.incrementAttempts(existingUser);
-    throw new UnauthorizedException('Contraseña incorrecta');
-  }
-
-  const payload = {
-    id: existingUser.id,
-    email: existingUser.email,
-    role: existingUser?.role ?? 'N/A',
-  };
-  console.log('Generando token para el usuario:', payload);
-
-  const token = await this.jwtService.signAsync(payload);
-  console.log('Token generado:', token);
-
-  // Resetea los intentos fallidos
-  await this.resetAttempts(existingUser.id);
-
-  // Responde con el token y el nombre completo
-  console.log('Sesión iniciada exitosamente');
-  return {
-    message: 'Sesión iniciada',
-    token,
-    email: existingUser.email,
-    name: existingUser.name + ' ' + existingUser.lastName,
-  };
 }
 
   private async suspendUser(userId: string) {
