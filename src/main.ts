@@ -27,6 +27,7 @@ async function bootstrap() {
     .setDescription('Documentación automática de la API con Swagger')
     .setVersion('1.0')
     .addBearerAuth()
+    .addServer(process.env.HEROKU_APP_URL || 'http://localhost:5000')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
