@@ -40,18 +40,14 @@ export class AuthService {
       const existingUser = await this.usersService.findOneByEmail(
         loginDto.email,
       );
-      console.log('Usuario encontrado:', existingUser);
 
       if (!existingUser) {
-        console.log('Email no registrado');
         throw new UnauthorizedException('Email no registrado');
       }
 
       const userStatus = existingUser.statusUser?.statusName.toLowerCase();
-      console.log('Estado del usuario:', userStatus);
 
       if (userStatus === 'suspendido') {
-        console.log('Usuario suspendido');
         throw new ForbiddenException(
           'Usuario suspendido, reestablezca contraseña',
         );
@@ -68,7 +64,6 @@ export class AuthService {
         existingUser.password,
         loginDto.password,
       );
-      console.log('¿Contraseña válida?', isPasswordValid);
 
       if (!isPasswordValid) {
         await this.incrementAttempts(existingUser);
