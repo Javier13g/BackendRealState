@@ -95,6 +95,7 @@ export class UpdateUserDto {
 
 export class UserResponseIncludePassword extends UserResponseDto {
   password: string;
+  userImg?: string | null;
 }
 
 export class LoginDto {

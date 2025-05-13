@@ -9,15 +9,24 @@ import {
 } from '@nestjs/common';
 import { jwtConstants } from '../constants/jtw.constant';
 import { JwtService } from '@nestjs/jwt';
+import { RevokedTokenService } from 'src/redis/redis.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly tokenService: RevokedTokenService,
+  ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Token no proporcionado');
+    }
+
+    const isRevoked = await this.tokenService.isTokenRevoked(token);
+    if (isRevoked) {
+      throw new UnauthorizedException('Token revocado');
     }
 
     try {
