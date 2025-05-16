@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   CreateUserDto,
   UpdateUserDto,
@@ -175,5 +179,60 @@ export class UsersService {
       where: { id: idUser },
       data: { ...data },
     });
+  }
+
+  async findPasswordResetByEmail(
+    email: string,
+  ): Promise<{ code: string; expiresAt: Date } | null> {
+    const passwordReset = await this.prisma.passwordReset.findUnique({
+      where: { email },
+    });
+    if (passwordReset) {
+      return {
+        code: passwordReset.code,
+        expiresAt: passwordReset.expiresAt,
+      };
+    }
+    return null;
+  }
+
+  async resetPasswordUser(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<boolean> {
+    const passwordReset = await this.prisma.passwordReset.findUnique({
+      where: { email, code },
+    });
+    if (!passwordReset) {
+      throw new UnauthorizedException('Código de recuperación no encontrado');
+    }
+    if (new Date() > passwordReset.expiresAt) {
+      throw new UnauthorizedException('Código de recuperación expirado');
+    }
+    const hashedPassword = await argon2.hash(newPassword);
+    await this.prisma.user.update({
+      where: { email },
+      data: { password: hashedPassword },
+    });
+    await this.prisma.passwordReset.delete({
+      where: { email, code },
+    });
+    await this.prisma.user.update({
+      where: { email },
+      data: { numberAttempts: 0 },
+    });
+
+    const statusActive = await this.prisma.statusUser.findFirst({
+      where: { statusName: { equals: 'activo', mode: 'insensitive' } },
+    });
+    if (statusActive) {
+      await this.prisma.user.update({
+        where: { email },
+        data: { statusId: statusActive.id },
+      });
+    }
+
+    return true;
   }
 }
