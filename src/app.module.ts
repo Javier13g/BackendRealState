@@ -10,6 +10,7 @@ import { ImgurService } from './imgur/imgur.service';
 import { UploadController } from './upload/upload.controller';
 import { MulterModule } from '@nestjs/platform-express';
 import { RedisModule } from './redis/redis.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { RedisModule } from './redis/redis.module';
       },
     }),
     RedisModule,
+    EmailModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, ImgurService],

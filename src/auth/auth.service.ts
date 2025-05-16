@@ -105,6 +105,17 @@ export class AuthService {
     }
   }
 
+  async logout(token: string): Promise<{ message: string }> {
+    try {
+      // Revocar el token actual
+      await this.tokenService.deleteToken(token);
+      return { message: 'Sesión cerrada correctamente' };
+    } catch (error) {
+      console.error('Error en logout:', error);
+      throw new UnauthorizedException('No se pudo cerrar la sesión');
+    }
+  }
+
   private async suspendUser(userId: string) {
     const state = (await this.usersService.listStateUser()).find(
       (state) => state.statusName.toLowerCase() === 'suspendido',
@@ -130,5 +141,32 @@ export class AuthService {
       throw new UnauthorizedException('Usuario no encontrado');
     }
     return user;
+  }
+
+  async validatePasswordRecoveryCode(email: string, code: string) {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+    const passwordReset =
+      await this.usersService.findPasswordResetByEmail(email);
+    if (!passwordReset) {
+      throw new UnauthorizedException('Código de recuperación no encontrado');
+    }
+    if (passwordReset.code !== code) {
+      throw new UnauthorizedException('Código de recuperación incorrecto');
+    }
+    if (new Date() > passwordReset.expiresAt) {
+      throw new UnauthorizedException('Código de recuperación expirado');
+    }
+    return true;
+  }
+
+  async resetPasswordUser(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<boolean> {
+    return await this.usersService.resetPasswordUser(email, code, newPassword);
   }
 }

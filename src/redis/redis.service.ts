@@ -30,4 +30,10 @@ export class RevokedTokenService {
 
     console.log(`Tokens expirados eliminados: ${result.count}`);
   }
+
+  async deleteToken(token: string): Promise<void> {
+    await this.prisma.revokedToken.delete({
+      where: { token },
+    });
+  }
 }
