@@ -104,7 +104,7 @@ export class UsersService {
         address: user.address,
         phoneNumber: user.phoneNumber,
         role: user?.role ?? null,
-        roleId: user?.id ?? null,
+        roleId: user?.roleId ?? null,
         statusUser: user.statusUser,
         statusId: user.statusId,
         numberAttempts: user.numberAttempts ?? 0,

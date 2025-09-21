@@ -36,4 +36,10 @@ export class RevokedTokenService {
       where: { token },
     });
   }
+
+  async findByToken(token: string) {
+    return this.prisma.revokedToken.findUnique({
+      where: { token },
+    });
+  }
 }

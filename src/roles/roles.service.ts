@@ -19,4 +19,10 @@ export class RolesService {
       where: { id },
     });
   }
+
+  findByName(name: string): Promise<Role | null> {
+    return this.prisma.role.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' } },
+    });
+  }
 }

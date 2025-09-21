@@ -1,7 +1,7 @@
 import {
-  ArgumentsHost,
-  Catch,
   ExceptionFilter,
+  Catch,
+  ArgumentsHost,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -23,7 +23,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (typeof res === 'string') {
         message = res;
       } else if (typeof res === 'object' && res !== null && 'message' in res) {
-        message = (res as { message: string }).message;
+        const msg = (res as Record<string, unknown>).message;
+        if (typeof msg === 'string') {
+          message = msg;
+        } else if (Array.isArray(msg)) {
+          message = msg.join(', ');
+        }
       }
     } else if (exception instanceof Error) {
       message = exception.message;

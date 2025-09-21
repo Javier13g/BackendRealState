@@ -14,23 +14,40 @@ import { UsersService } from 'src/users/users.service';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { RevokedTokenService } from 'src/redis/redis.service';
+import { StatusUserService } from 'src/status-user/status-user.service';
+import { RolesService } from 'src/roles/roles.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
+    private readonly statusUserService: StatusUserService,
     private readonly jwtService: JwtService,
     private readonly tokenService: RevokedTokenService,
+    private readonly roleService: RolesService,
     //private readonly prismaService: PrismaService,
   ) {}
   async register(registerDto: CreateUserDto) {
+    console.log('Register DTO:', registerDto);
     const data = registerDto;
     const existingUser = await this.usersService.findOneByEmail(data.email);
+    const state = (await this.statusUserService.findAll()).find(
+      (state) => state.statusName.toLowerCase() === 'inactivo',
+    );
+    const role = await this.roleService.findByName('Vendedor');
     if (existingUser) {
       throw new BadRequestException('El email ya está en uso');
     }
+    if (!state) {
+      throw new BadRequestException('No se encontró el estado "inactivo"');
+    }
+    if (!role) {
+      throw new BadRequestException('No se encontró el rol "Vendedor"');
+    }
     return await this.usersService.createWithRegisterForm({
       ...data,
+      statusId: state.id,
+      roleId: role.id,
     });
   }
 
@@ -84,12 +101,10 @@ export class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const decodedToken = this.jwtService.decode(token);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const ttl = decodedToken.exp - Math.floor(Date.now() / 1000);
+      const expirationDate = new Date(decodedToken.exp * 1000);
 
-      await this.tokenService.revokeToken(
-        token,
-        new Date(Date.now() + ttl * 1000),
-      );
+      await this.tokenService.revokeToken(token, expirationDate);
+
       await this.resetAttempts(existingUser.id);
 
       return {
@@ -168,5 +183,17 @@ export class AuthService {
     newPassword: string,
   ): Promise<boolean> {
     return await this.usersService.resetPasswordUser(email, code, newPassword);
+  }
+
+  async isTokenValid(token: string): Promise<boolean> {
+    const revoked = await this.tokenService.findByToken(token);
+    if (!revoked) {
+      return false;
+    }
+    if (revoked.expiresAt < new Date()) {
+      await this.tokenService.deleteToken(token);
+      return false;
+    }
+    return true;
   }
 }

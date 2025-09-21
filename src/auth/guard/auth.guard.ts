@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -17,9 +18,10 @@ export class AuthGuard implements CanActivate {
     private readonly jwtService: JwtService,
     private readonly tokenService: RevokedTokenService,
   ) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const token = this.extractTokenFromCookie(request);
     if (!token) {
       throw new UnauthorizedException('Token no proporcionado');
     }
@@ -40,11 +42,7 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] =
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      (request as any).headers.authorization?.split(' ') || [];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return type === 'Bearer' ? token : undefined;
+  private extractTokenFromCookie(request: any): string | undefined {
+    return request.cookies?.token;
   }
 }

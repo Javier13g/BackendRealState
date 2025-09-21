@@ -9,6 +9,8 @@ import { jwtConstants } from './constants/jtw.constant';
 import { ImgurService } from 'src/imgur/imgur.service';
 import { RedisModule } from 'src/redis/redis.module';
 import { RevokedTokenService } from 'src/redis/redis.service';
+import { RolesService } from 'src/roles/roles.service';
+import { StatusUserService } from 'src/status-user/status-user.service';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { RevokedTokenService } from 'src/redis/redis.service';
     PrismaService,
     ImgurService,
     RevokedTokenService,
+    RolesService,
+    StatusUserService,
   ],
 })
 export class AuthModule {}
