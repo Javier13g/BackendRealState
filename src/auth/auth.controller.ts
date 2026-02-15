@@ -38,6 +38,8 @@ export class AuthController {
       email: result.email,
       name: result.name,
       image: result.image,
+      id: result.id,
+      role: result.role?.name ?? null,
     };
   }
 

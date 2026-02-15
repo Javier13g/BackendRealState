@@ -113,6 +113,8 @@ export class AuthService {
         email: existingUser.email,
         name: existingUser.name + ' ' + existingUser.lastName,
         image: existingUser?.userImg ?? null,
+        id: existingUser.id,
+        role: existingUser?.role ?? null,
       };
     } catch (error) {
       console.error('Error en login:', error);

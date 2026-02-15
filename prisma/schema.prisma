@@ -9,12 +9,13 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  id             String      @id @default(uuid())
   email          String      @unique
   password       String
   name           String
@@ -23,35 +24,112 @@ model User {
   address        String
   phoneNumber    String
   role           Role?       @relation(fields: [roleId], references: [id])
-  roleId         String?     @db.ObjectId
-  statusId       String?     @db.ObjectId
+  roleId         String?
+  statusId       String?
   statusUser     StatusUser? @relation(fields: [statusId], references: [id])
   numberAttempts Int
   userImg        String?
+  properties     Property[]
 }
 
 model Role {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  id    String @id @default(uuid())
   name  String
   users User[]
 }
 
 model StatusUser {
-  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  id         String @id @default(uuid())
   statusName String
   user       User[]
 }
 
 model RevokedToken {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  id        String @id @default(uuid())
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
 
 model PasswordReset {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   email     String   @unique
   code      String
   expiresAt DateTime
+}
+
+// --- NUEVOS MODELOS INMOBILIARIOS ---
+
+model Property {
+  id          String   @id @default(uuid())
+  title       String
+  description String?  @db.Text // Permite textos largos
+  address     String
+  city        String
+  state       String?
+  zipCode     String?
+  
+  // Detalles financieros
+  price       Decimal  @db.Decimal(15, 2) // Mejor que Float para dinero
+  currency    String   @default("DOP") // USD, DOP, EUR, etc.
+  
+  // Características físicas
+  area        Float    // Metros cuadrados o pies cuadrados
+  bedrooms    Int
+  bathrooms   Int      // Puedes usar Float si manejas medios baños (1.5)
+  parking     Int      @default(0)
+  
+  // Clasificación y Estado
+  type        PropertyType   @default(APARTMENT)
+  status      PropertyStatus @default(AVAILABLE)
+  listingType ListingType    // VENTA o ALQUILER
+
+  // Relaciones
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  images      PropertyImage[]
+  features    Feature[]      // Relación muchos a muchos (Amenities)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Para manejar múltiples fotos por propiedad
+model PropertyImage {
+  id         String   @id @default(uuid())
+  url        String
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+// Características (Piscina, Gimnasio, Seguridad 24/7, etc.)
+model Feature {
+  id         String     @id @default(uuid())
+  name       String     @unique
+  properties Property[] // Prisma maneja la tabla intermedia automáticamente
+}
+
+// --- ENUMS PARA ESTANDARIZACIÓN ---
+
+enum PropertyType {
+  HOUSE
+  APARTMENT
+  COMMERCIAL
+  LAND
+  OFFICE
+  WAREHOUSE
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  SOLD
+  RENTED
+  RESERVED
+  INACTIVE
+}
+
+enum ListingType {
+  SALE
+  RENT
 }

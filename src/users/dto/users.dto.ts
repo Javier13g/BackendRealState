@@ -85,11 +85,31 @@ export class UserResponseDto {
 }
 
 export class UpdateUserDto {
-  email?: string;
+  @IsOptional()
+  @IsEmail()
+  email?: string; // Usa ? para indicar opcional en TypeScript
+
+  @IsOptional()
+  @IsString()
   name?: string;
+
+  @IsOptional()
+  @IsString()
   lastName?: string;
+
+  @IsOptional()
+  @IsString()
   address?: string;
+
+  @IsOptional()
+  @IsString()
   phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  cardId?: string; // Asegúrate de agregarlo si lo estás enviando
+
+  @IsOptional()
   roleId?: string | null;
 }
 

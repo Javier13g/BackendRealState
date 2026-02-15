@@ -58,8 +58,8 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
+  //@UseGuards(AuthGuard)
+  //@ApiBearerAuth()
   findAll(@Query('page') page: number, @Query('pageSize') pageSize: number) {
     return this.usersService.findAll(page, pageSize);
   }
@@ -74,8 +74,16 @@ export class UsersController {
   @Put(':id')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UpdateUserDto })
-  putUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return this.usersService.PutDataUser(id, dto);
+  @UseInterceptors(FileInterceptor('userImg'))
+  putUser(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    console.log('DTO recibido:', dto); // <--- MIRA ESTO EN LA CONSOLA
+    console.log('Archivo recibido:', file);
+    return this.usersService.PutDataUser(id, dto, file);
   }
 }

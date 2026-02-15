@@ -9,7 +9,7 @@ export class PrismaService
   async onModuleInit() {
     try {
       await this.$connect();
-      console.log('✅ Prisma conectado a MongoDB');
+      console.log('✅ Prisma conectado a Supabase (PostgreSQL)');
     } catch (error) {
       console.error('❌ Error al conectar Prisma:', error);
     }

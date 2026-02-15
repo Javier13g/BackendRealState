@@ -13,7 +13,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { getPaginationParams } from 'src/utils/pagination.utils';
 import { ImgurService } from 'src/imgur/imgur.service';
-import { isValidObjectId } from 'src/utils/validObjectId.utils';
+import { isValidUUID } from 'src/utils/validUUID.utils';
 
 @Injectable()
 export class UsersService {
@@ -165,8 +165,12 @@ export class UsersService {
     });
   }
 
-  async PutDataUser(idUser: string, data: Partial<UpdateUserDto>) {
-    if (!isValidObjectId(idUser)) {
+  async PutDataUser(
+    idUser: string,
+    data: Partial<UpdateUserDto>,
+    file?: Express.Multer.File,
+  ) {
+    if (!isValidUUID(idUser)) {
       throw new BadRequestException('ID de usuario inválido');
     }
     const user = await this.prisma.user.findUnique({
@@ -175,9 +179,18 @@ export class UsersService {
     if (!user) {
       throw new Error('Usuario no encontrado');
     }
+
+    let userImgUrl: string | undefined;
+    if (file) {
+      userImgUrl = await this.imgurService.uploadImage(file);
+    }
+
     return await this.prisma.user.update({
       where: { id: idUser },
-      data: { ...data },
+      data: {
+        ...data,
+        ...(userImgUrl && { userImg: userImgUrl }),
+      },
     });
   }
 

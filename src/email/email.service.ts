@@ -29,7 +29,7 @@ export class EmailService {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const emailApi = new SibApiV3Sdk.TransactionalEmailsApi();
-    const sender = { email: process.env.BREVO_FROM_EMAIL, name: 'RealState' };
+    const sender = { email: process.env.BREVO_FROM_EMAIL, name: 'casafacil' };
     const receivers = [{ email }];
 
     const emailContent = {
@@ -44,7 +44,7 @@ export class EmailService {
       await emailApi.sendTransacEmail(emailContent);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Error al enviar el correo:', error.message);
+        console.error('Error al enviar el correo:', error);
       } else {
         console.error('Error al enviar el correo:', error);
       }
