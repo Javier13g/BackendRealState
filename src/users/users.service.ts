@@ -185,6 +185,22 @@ export class UsersService {
       userImgUrl = await this.imgurService.uploadImage(file);
     }
 
+    if (data.roleId) {
+      const role = await this.prisma.role.findFirst({
+        where: {
+          name: {
+            equals: data.roleId,
+            mode: 'insensitive',
+          },
+        },
+      });
+
+      if (!role) {
+        throw new BadRequestException(`El rol '${data.roleId}' no existe`);
+      }
+      data.roleId = role.id;
+    }
+
     return await this.prisma.user.update({
       where: { id: idUser },
       data: {
