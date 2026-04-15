@@ -82,8 +82,23 @@ export class UsersController {
     @Body() dto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    console.log('DTO recibido:', dto); // <--- MIRA ESTO EN LA CONSOLA
-    console.log('Archivo recibido:', file);
     return this.usersService.PutDataUser(id, dto, file);
+  }
+
+  @Put(':id/status')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        statusId: {
+          type: 'string',
+        },
+      },
+    },
+  })
+  updateStatus(@Param('id') id: string, @Body('statusId') statusId: string) {
+    return this.usersService.changeUserState(id, statusId);
   }
 }

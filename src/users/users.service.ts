@@ -264,4 +264,19 @@ export class UsersService {
 
     return true;
   }
+
+  async changeUserState(userId: string, statusId: string) {
+    const state = (await this.prisma.statusUser.findMany()).find(
+      (state) => state.id === statusId,
+    );
+
+    if (!state) {
+      throw new BadRequestException(`Estado no encontrado`);
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { statusId: state.id },
+    });
+  }
 }

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 //import { PrismaService } from 'src/prisma/prisma.service';
@@ -16,9 +17,11 @@ import { JwtService } from '@nestjs/jwt';
 import { RevokedTokenService } from 'src/redis/redis.service';
 import { StatusUserService } from 'src/status-user/status-user.service';
 import { RolesService } from 'src/roles/roles.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly usersService: UsersService,
     private readonly statusUserService: StatusUserService,
@@ -27,8 +30,14 @@ export class AuthService {
     private readonly roleService: RolesService,
     //private readonly prismaService: PrismaService,
   ) {}
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async handleTokenCleanup() {
+    this.logger.debug('Ejecutando limpieza de tokens expirados...');
+    await this.tokenService.cleanExpiredTokens();
+  }
+
   async register(registerDto: CreateUserDto) {
-    console.log('Register DTO:', registerDto);
     const data = registerDto;
     const existingUser = await this.usersService.findOneByEmail(data.email);
     const state = (await this.statusUserService.findAll()).find(
@@ -53,13 +62,12 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     try {
-      await this.tokenService.cleanExpiredTokens();
       const existingUser = await this.usersService.findOneByEmail(
         loginDto.email,
       );
 
       if (!existingUser) {
-        throw new UnauthorizedException('Email no registrado');
+        throw new UnauthorizedException('Credenciales incorrectas');
       }
 
       const userStatus = existingUser.statusUser?.statusName.toLowerCase();
@@ -67,6 +75,12 @@ export class AuthService {
       if (userStatus === 'suspendido') {
         throw new ForbiddenException(
           'Usuario suspendido, reestablezca contraseña',
+        );
+      }
+
+      if (userStatus === 'inactivo') {
+        throw new ForbiddenException(
+          'Usuario inactivo, contacte al administrador',
         );
       }
 
@@ -84,7 +98,7 @@ export class AuthService {
 
       if (!isPasswordValid) {
         await this.incrementAttempts(existingUser);
-        throw new UnauthorizedException('Contraseña incorrecta');
+        throw new UnauthorizedException('Credenciales incorrectas');
       }
 
       const payload = {
@@ -103,9 +117,10 @@ export class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const expirationDate = new Date(decodedToken.exp * 1000);
 
-      await this.tokenService.revokeToken(token, expirationDate);
-
-      await this.resetAttempts(existingUser.id);
+      await Promise.all([
+        this.tokenService.revokeToken(token, expirationDate),
+        this.resetAttempts(existingUser.id),
+      ]);
 
       return {
         message: 'Sesión iniciada',
@@ -118,7 +133,7 @@ export class AuthService {
       };
     } catch (error) {
       console.error('Error en login:', error);
-      throw error; // sigue lanzando para que se vea en Swagger
+      throw error;
     }
   }
 

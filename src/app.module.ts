@@ -11,9 +11,11 @@ import { UploadController } from './upload/upload.controller';
 import { MulterModule } from '@nestjs/platform-express';
 import { RedisModule } from './redis/redis.module';
 import { EmailModule } from './email/email.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     PrismaModule,
     UsersModule,
     RolesModule,
